@@ -86,7 +86,10 @@ table.table-middle td {
 </div>
 
 <form class="form-horizontal" id="frm-import">
-    <input type="hidden" name="readline" value="1" /> <input type="hidden" name="check" id="check" value="1" /> <input type="hidden" name="current" id="current" value="1" />
+    <input type="hidden" name="readline" value="1" />
+    <input type="hidden" name="file_name" id="filename" value="" /> 
+    <input type="hidden" name="check" id="check" value="1" /> 
+    <input type="hidden" name="current" id="current" value="1" />
     <div id="step1">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -184,7 +187,9 @@ table.table-middle td {
         </div>
     </div>
     <div id="step3" class="hidden">
-        <p class="text-success"><span id="txt-import-waiting"><i class="fa fa-spinner fa-spin fa-fw">&nbsp;</i>{LANG.import_wating}</span></p>
+        <p class="text-success">
+            <span id="txt-import-waiting"><i class="fa fa-spinner fa-spin fa-fw">&nbsp;</i>{LANG.import_wating}</span>
+        </p>
         <table class="table table-striped table-bordered table-hover table-middle" id="table-import">
             <colgroup>
                 <col class="w200">
@@ -232,6 +237,7 @@ table.table-middle td {
                 if (json.error) {
                     alert(json.msg);
                 } else {
+                    $('#filename').val(json.filename).change();
                     $('#table-check').show();
                     $.each(json.data, function(index, value) {
                         $('#table-check tbody, #table-import tbody').append('<tr id="row-' + index + '"><td>' + value.username + '</td><td><a href="mailto:' + value.email + '">' + value.email + '</a></td><td class="status"></td></tr>');
@@ -280,7 +286,7 @@ table.table-middle td {
                                 $('#btn-step1').click();
                             }
                         }
-                    }else{
+                    } else {
                         $('#txt-import-waiting').html('<i class="fa fa-check-circle">&nbsp;</i>{LANG.import_wating_success}');
                         if (confirm('{LANG.import_wating_confirm}')) {
                             window.location.href = script_name + '?' + nv_name_variable + '=' + nv_module_name;

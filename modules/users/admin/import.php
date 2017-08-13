@@ -2,10 +2,10 @@
 
 /**
  * @Project NUKEVIET 4.x
- * @Author VINADES.,JSC (contact@vinades.vn)
- * @Copyright (C) 2014 VINADES.,JSC. All rights reserved
+ * @Author mynukeviet (contact@mynukeviet.com)
+ * @Copyright (C) 2014 mynukeviet. All rights reserved
  * @License GNU/GPL version 2 or any later version
- * @Createdate 2-10-2010 18:49
+ * @Createdate 13-08-2017 15:49
  */
 if (!defined('NV_IS_FILE_ADMIN')) {
     die('Stop!!!');
@@ -306,14 +306,15 @@ if ($nv_Request->isset_request('download', 'get')) {
 if ($nv_Request->isset_request('upload', 'post')) {
     $array_field = nv_get_field();
 
-    //if (isset($_FILES['file']) and is_uploaded_file($_FILES['file']['tmp_name'])) {
-    if (1 == 1) {
+    if (isset($_FILES['file']) and is_uploaded_file($_FILES['file']['tmp_name'])) {
         $filename = nv_string_to_filename($_FILES['file']['name']);
-        $filename = 'data.csv';
         $file = NV_ROOTDIR . '/' . NV_TEMP_DIR . '/' . $filename;
 
-        //if (move_uploaded_file($_FILES['file']['tmp_name'], $file)) {
-        if (1 == 1) {
+        if(file_exists($file)){
+            unlink($file);
+        }
+
+        if (move_uploaded_file($_FILES['file']['tmp_name'], $file)) {
             // đọc file csv theo dòng
             $file = new SplFileObject($file);
 
@@ -343,7 +344,6 @@ if ($nv_Request->isset_request('upload', 'post')) {
                 'data' => $array_data
             ));
         }
-
     }
     nv_jsonOutput(array(
         'error' => 1,
@@ -354,7 +354,7 @@ if ($nv_Request->isset_request('upload', 'post')) {
 if ($nv_Request->isset_request('readline', 'post')) {
     $check = $nv_Request->get_int('check', 'post', 0);
     $current = $nv_Request->get_int('current', 'post', 0);
-    $filename = $nv_Request->get_title('file_name', 'post', 'data.csv'); //
+    $filename = $nv_Request->get_title('file_name', 'post', '');
     $file = NV_ROOTDIR . '/' . NV_TEMP_DIR . '/' . $filename;
 
     if (!empty($current) and file_exists($file)) {
@@ -555,8 +555,7 @@ if ($nv_Request->isset_request('readline', 'post')) {
         // Kiểm tra các trường dữ liệu tùy biến + Hệ thống
         if ($check) {
             $array_error = $array_error + nv_users_field_check($custom_fields);
-        } else {
-        }
+        } else {}
 
         $notify = '';
         if ($exit) {
