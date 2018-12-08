@@ -89,7 +89,7 @@ table.table-middle td {
     <input type="hidden" name="readline" value="1" />
     <input type="hidden" name="file_name" id="filename" value="" /> 
     <input type="hidden" name="check" id="check" value="1" /> 
-    <input type="hidden" name="current" id="current" value="1" />
+    <input type="hidden" name="current" id="current" value="{STARTROW}" />
     <div id="step1">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -101,7 +101,7 @@ table.table-middle td {
                 </button>
                 <div class="m-bottom">
                     <h3>2. {LANG.step1_b}</h3>
-                    <input type="file" name="file" id="file" class="form-control" accept=".csv">
+                    <input type="file" name="file" id="file" class="form-control" accept=".xls">
                 </div>
                 <div id="step1_c">
                     <div class="m-bottom">
@@ -211,7 +211,7 @@ table.table-middle td {
 <script>
     var count_error = 0;
     var check = 1;
-    var current = 1;
+    var current = {STARTROW};
     var total = 0;
     
     function nv_users_upload() {
@@ -240,7 +240,8 @@ table.table-middle td {
                     $('#filename').val(json.filename).change();
                     $('#table-check').show();
                     $.each(json.data, function(index, value) {
-                        $('#table-check tbody, #table-import tbody').append('<tr id="row-' + index + '"><td>' + value.username + '</td><td><a href="mailto:' + value.email + '">' + value.email + '</a></td><td class="status"></td></tr>');
+                        console.log(value)
+                        $('#table-check tbody, #table-import tbody').append('<tr id="row-' + index + '"><td>' + value[0] + '</td><td><a href="mailto:' + value[1] + '">' + value[1] + '</a></td><td class="status"></td></tr>');
                     });
                     total = json.total;
                     count_error = 0;
@@ -275,7 +276,7 @@ table.table-middle td {
                     $(selector + ' tbody #row-' + (current)).find('.status').html('<span class="text-success"><em class="fa fa-check-circle">&nbsp;</em>' + lang_success + '</span>');
                 }
                 
-                if (current == total) {
+                if (json.exit) {
                     if (check) {
                         $('#txt-check').html('{LANG.check_success}');
                         if (count_error > 0) {
@@ -307,8 +308,8 @@ table.table-middle td {
     $('#btn-import').click(function() {
         $('#check').val(0);
         check = 0;
-        $('#current').val(1);
-        current = 1;
+        current = {STARTROW};
+        $('#current').val(current);
         nv_users_readline();
         return !1;
     });

@@ -11,6 +11,22 @@ if (!defined('NV_IS_FILE_ADMIN')) {
     die('Stop!!!');
 }
 
+if (!class_exists('PHPExcel')) {
+    if (file_exists(NV_ROOTDIR . '/includes/class/PHPExcel.php')) {
+        require_once NV_ROOTDIR . '/includes/class/PHPExcel.php';
+    }
+}
+
+if (!class_exists('PHPExcel')) {
+    $contents = nv_theme_alert($lang_module['phpexcel_not_exists_title'], $lang_module['phpexcel_not_exists_content'], 'danger');
+    include NV_ROOTDIR . '/includes/header.php';
+    echo nv_admin_theme($contents);
+    include NV_ROOTDIR . '/includes/footer.php';
+}
+
+$startCol = 'A';
+$startRow = 5;
+
 function nv_users_field_check($custom_fields, $check = 1)
 {
     global $db, $global_config, $global_array_genders, $lang_module;
@@ -281,61 +297,37 @@ if ($nv_Request->isset_request('guide', 'post')) {
 
     $xtpl->parse('guide');
     $contents = $xtpl->text('guide');
-
-    die($contents);
+    nv_htmlOutput($contents);
 }
 
 if ($nv_Request->isset_request('download', 'get')) {
-
     $array_field = nv_get_field();
-
-    // xuất csv
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename=data.csv');
-
-    $output = fopen('php://output', 'w');
-
-    $field = array();
-    foreach ($array_field as $data) {
-        $field[] = $data['text'];
-    }
-    fputcsv($output, $field);
-    die();
+    nv_users_download($array_field);
 }
 
 if ($nv_Request->isset_request('upload', 'post')) {
-    $array_field = nv_get_field();
-
     if (isset($_FILES['file']) and is_uploaded_file($_FILES['file']['tmp_name'])) {
         $filename = nv_string_to_filename($_FILES['file']['name']);
         $file = NV_ROOTDIR . '/' . NV_TEMP_DIR . '/' . $filename;
 
-        if(file_exists($file)){
+        if (file_exists($file)) {
             unlink($file);
         }
 
         if (move_uploaded_file($_FILES['file']['tmp_name'], $file)) {
-            // đọc file csv theo dòng
-            $file = new SplFileObject($file);
+            $objPHPExcel = PHPExcel_IOFactory::load($file);
+            $objWorksheet = $objPHPExcel->setActiveSheetIndex(0);
+            $highestRow = $objWorksheet->getHighestRow();
+            $highestColumn = $objWorksheet->getHighestColumn();
 
             $array_data = array();
-            while (!$file->eof()) {
-                $line = str_getcsv($file->fgets());
-                if (implode($line) == null) continue;
-                $line = array_combine(array_keys(nv_get_field()), $line);
-                $array_data[] = $line;
+            for ($row = $startRow; $row <= $highestRow; $row++) {
+                $col = 0;
+                for ($column = $startCol; $column <= $highestColumn; $column++) {
+                    $array_data[$row][$col] = $objWorksheet->getCellByColumnAndRow($col, $row)->getValue();
+                    $col++;
+                }
             }
-
-            // nếu số lượng các cột không giống nhau
-            if (sizeof($array_data[0]) != sizeof($array_field)) {
-                nv_jsonOutput(array(
-                    'error' => 1,
-                    'msg' => $lang_module['error_file_struct']
-                ));
-            }
-
-            // xóa header
-            unset($array_data[0]);
 
             nv_jsonOutput(array(
                 'error' => 0,
@@ -353,27 +345,28 @@ if ($nv_Request->isset_request('upload', 'post')) {
 
 if ($nv_Request->isset_request('readline', 'post')) {
     $check = $nv_Request->get_int('check', 'post', 0);
-    $current = $nv_Request->get_int('current', 'post', 0);
+    $current = $nv_Request->get_int('current', 'post', $startRow);
     $filename = $nv_Request->get_title('file_name', 'post', '');
     $file = NV_ROOTDIR . '/' . NV_TEMP_DIR . '/' . $filename;
 
     if (!empty($current) and file_exists($file)) {
-        // đọc file csv theo dòng
-        $file = new SplFileObject($file);
-        $file->seek($current);
+        $objPHPExcel = PHPExcel_IOFactory::load($file);
+        $objWorksheet = $objPHPExcel->setActiveSheetIndex(0);
+        $highestColumn = $objWorksheet->getHighestColumn();
+        $highestRow = $objWorksheet->getHighestRow();
 
-        $array_error = array();
-
-        $array_data = str_getcsv($file->current());
+        $array_data = $objWorksheet->rangeToArray('A' . $current . ':' . $highestColumn . $current)[0];
+        $array_data = array_map('nv_replate_null', $array_data);
         $array_data = array_combine(array_keys(nv_get_field()), $array_data);
-        $exit = $file->eof() ? 1 : 0;
+
+        $exit = $current == $highestRow ? 1 : 0;
 
         $array_data_tmp = $array_data;
         unset($array_data_tmp['username'], $array_data_tmp['password'], $array_data_tmp['email']);
         $custom_fields = $array_data_tmp;
 
+        $array_error = array();
         foreach ($array_data as $field => $value) {
-
             if ($check) {
                 // nếu chế độ kiểm tra dữ liệu
                 if ($field == 'username') {
@@ -507,7 +500,6 @@ if ($nv_Request->isset_request('readline', 'post')) {
                 $data_insert['sig'] = $array_data['sig'];
                 $data_insert['question'] = $array_data['question'];
                 $data_insert['answer'] = $array_data['answer'];
-
                 $userid = $db->insert_id($sql, 'userid', $data_insert);
 
                 if (!$userid) {
@@ -597,7 +589,6 @@ if ($nv_Request->isset_request('step3', 'post')) {
             ));
         }
     }
-
     nv_jsonOutput(array(
         'error' => 1,
         'msg' => $lang_module['error_required_file']
@@ -620,6 +611,7 @@ if (!empty($groups_list)) {
 
 $xtpl = new XTemplate('import.tpl', NV_ROOTDIR . '/themes/' . $global_config['module_theme'] . '/modules/' . $module_file);
 $xtpl->assign('LANG', $lang_module);
+$xtpl->assign('STARTROW', $startRow);
 $xtpl->assign('URL_DOWNLOAD', NV_BASE_ADMINURL . 'index.php?' . NV_LANG_VARIABLE . '=' . NV_LANG_DATA . '&amp;' . NV_NAME_VARIABLE . '=' . $module_name . '&amp;' . NV_OP_VARIABLE . '=import&download=1');
 
 $a = 0;
