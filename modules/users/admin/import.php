@@ -533,7 +533,7 @@ if ($nv_Request->isset_request('readline', 'post')) {
                     $subject = $lang_module['adduser_register'];
                     $_url = NV_MY_DOMAIN . nv_url_rewrite(NV_BASE_SITEURL . 'index.php?' . NV_LANG_VARIABLE . '=' . NV_LANG_DATA . '&' . NV_NAME_VARIABLE . '=' . $module_name, true);
                     $message = sprintf($lang_module['adduser_register_info1'], $full_name, $global_config['site_name'], $_url, $_user['username'], $_user['password1']);
-                    @nv_sendmail($global_config['site_email'], $_user['email'], $subject, $message);
+                    @nv_sendmail($global_config['site_email'], $array_data['email'], $subject, $message);
                 }
 
                 nv_jsonOutput(array(
