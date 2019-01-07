@@ -302,7 +302,7 @@ if ($nv_Request->isset_request('guide', 'post')) {
 
 if ($nv_Request->isset_request('download', 'get')) {
     $array_field = nv_get_field();
-    nv_users_download($array_field);
+    nv_users_download($array_field, 'xls');
 }
 
 if ($nv_Request->isset_request('upload', 'post')) {

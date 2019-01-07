@@ -39,6 +39,10 @@ function nv_users_download($array_data, $type = 'xlsx')
             $array['objType'] = 'Excel2007';
             $array['objExt'] = 'xlsx';
             break;
+        case 'xls':
+            $array['objType'] = 'Excel5';
+            $array['objExt'] = 'xls';
+            break;
         case 'ods':
             $array['objType'] = 'OpenDocument';
             $array['objExt'] = 'ods';
