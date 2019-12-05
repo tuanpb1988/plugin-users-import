@@ -34,6 +34,7 @@ $lang_module['note'] = 'Ghi chú';
 $lang_module['comment_username'] = 'Tên đăng nhập cần tuân theo cấu hình module';
 $lang_module['comment_password'] = 'Mật khẩu cần tuân theo cấu hình module';
 $lang_module['comment_sig'] = '<strong>%d</strong> đến <strong>%d</strong> ký tự';
+$lang_module['comment_gender'] = '<strong>N</strong>: Không khai báo</br><strong>M</strong>: Nam</br><strong>F</strong>: Nữ';
 $lang_module['start'] = 'Bắt đầu';
 $lang_module['reading'] = 'Đang tải file...';
 $lang_module['users_list'] = 'Danh sách tài khoản';

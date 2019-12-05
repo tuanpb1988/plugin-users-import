@@ -29,7 +29,7 @@ $startRow = 5;
 
 function nv_users_field_check($custom_fields, $check = 1)
 {
-    global $db, $global_config, $global_array_genders, $lang_module;
+    global $db, $global_config, $lang_module;
 
     $query_field = $array_error = array();
     $array_field_config = array();
@@ -247,7 +247,7 @@ function nv_get_field()
                     //
                 }
                 if ($row_field['field'] == 'gender') {
-                    //
+                    $comment = $lang_module['comment_gender'];
                 }
             } else {
                 if ($row_field['required']) {
