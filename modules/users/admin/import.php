@@ -33,10 +33,17 @@ function nv_users_field_check($custom_fields, $check = 1)
 
     $query_field = $array_error = array();
     $array_field_config = array();
-    $result_field = $db->query('SELECT * FROM ' . NV_MOD_TABLE . '_field ORDER BY weight ASC');
+    
+    
+    $where = '';
+    if ($info_table) {
+        $where = ' WHERE fid > 7 '; //Chỉ lấy các trường custom có trong bảng users_infor
+    }
+    $result_field = $db->query('SELECT * FROM ' . NV_MOD_TABLE . '_field ' . $where . 'ORDER BY weight ASC');
+    
     while ($row_field = $result_field->fetch()) {
         $language = unserialize($row_field['language']);
-        $row_field['title'] = (isset($language[NV_LANG_DATA])) ? $language[NV_LANG_DATA][0] : $row['field'];
+        $row_field['title'] = (isset($language[NV_LANG_DATA])) ? $language[NV_LANG_DATA][0] : $row_field['field'];
         $row_field['description'] = (isset($language[NV_LANG_DATA])) ? nv_htmlspecialchars($language[NV_LANG_DATA][1]) : '';
         if (!empty($row_field['field_choices'])) {
             $row_field['field_choices'] = unserialize($row_field['field_choices']);
@@ -219,7 +226,7 @@ function nv_get_field()
     while ($row_field = $result_field->fetch()) {
         if (in_array($row_field['field_type'], $array_allow_field)) {
             $language = unserialize($row_field['language']);
-            $row_field['title'] = (isset($language[NV_LANG_DATA])) ? $language[NV_LANG_DATA][0] : $row['field'];
+            $row_field['title'] = (isset($language[NV_LANG_DATA])) ? $language[NV_LANG_DATA][0] : $row_field['field'];
             $row_field['description'] = (isset($language[NV_LANG_DATA])) ? nv_htmlspecialchars($language[NV_LANG_DATA][1]) : '';
             if (!empty($row_field['field_choices'])) {
                 $row_field['field_choices'] = unserialize($row_field['field_choices']);
@@ -510,12 +517,13 @@ if ($nv_Request->isset_request('readline', 'post')) {
                     ));
                 }
 
-                $query_field = nv_users_field_check($custom_fields, false);
+                $query_field = nv_users_field_check($custom_fields, false, 1);
                 $query_field['userid'] = $userid;
-                $db->query('INSERT INTO ' . NV_MOD_TABLE . '_info (' . implode(', ', array_keys($query_field)) . ') VALUES (' . implode(', ', array_values($query_field)) . ')');
 
-                nv_insert_logs(NV_LANG_DATA, $module_name, 'log_add_user', 'userid ' . $userid, $admin_info['userid']);
+                $_sql = 'INSERT INTO ' . NV_MOD_TABLE . '_info (' . implode(', ', array_keys($query_field)) . ') VALUES (' . implode(', ', array_values($query_field)) . ')';
+                $db->query($_sql);
 
+                nv_insert_logs(NV_LANG_DATA, $module_name, 'Import user from excel', 'userid ' . $userid, $admin_info['userid']);
                 if (!empty($_user['in_groups'])) {
                     foreach ($_user['in_groups'] as $group_id) {
                         if ($group_id != 7) {
